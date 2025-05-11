@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+requests
+jinja2
+httpx
+bs4
+python-dotenv
+openai

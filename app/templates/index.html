@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <title>Word Lookup</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        // Function to fetch and display the image result
+        async function lookupImage(word) {
+            const response = await fetch(`/api/lookup?word=${word}`);
+            const data = await response.json();
+            const img = document.getElementById("imageResult");
+
+            if (data.verb_image_url) {
+                celebrate();
+                // Display article above the image
+                const articleBlock = document.getElementById("articleBlock");
+                if (data.article) {
+                    articleBlock.innerText = data.article;
+                    articleBlock.style.display = "block";
+                    articleBlock.style.fontSize = "50px";
+                    articleBlock.style.fontWeight = "bold";
+                    articleBlock.style.color = data.article === "der" ? "#1e90ff" :
+                                               data.article === "die" ? "#dc143c" :
+                                               data.article === "das" ? "#ffa500" : "#333";
+                }
+
+                img.src = data.verb_image_url;
+                img.style.display = "block";
+
+                // Display the translation result
+                const translationResult = document.getElementById("translationResult");
+                translationResult.innerText = data.translation;
+                translationResult.style.display = "block";
+                
+                // Insert Beispiele block after image
+                const beispieleBlock = document.getElementById("beispieleBlock");
+                const beispieleContainer = document.getElementById("beispiele-container");
+
+                // --- Replace Beispiele block ---
+                beispieleContainer.innerHTML = ""; // Clear existing examples
+
+                if (data.beispiele_list && data.beispiele_list.length > 0) {
+                    const ul = document.createElement("ul");
+                    ul.style.listStyle = "none";
+                    ul.style.padding = "0";
+
+                    data.beispiele_list.forEach(example => {
+                        const li = document.createElement("li");
+                        li.style.marginBottom = "10px";
+
+                        li.innerHTML = `
+                            <strong>${example.de}</strong><br>
+                            <img src="/static/flags/en.png" alt="EN" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;">
+                            ${example.en}
+                        `;
+
+                        ul.appendChild(li);
+                    });
+
+                    beispieleContainer.appendChild(ul);
+                    beispieleBlock.style.display = "block";
+                } else {
+                    // beispieleBlock.style.display = "none";
+                    // Print a message if there are no examples
+                    beispieleBlock.innerHTML = "<p>No examples found.</p>";
+                }
+                // --- End Replace Beispiele block ---
+
+            } else {
+                img.style.display = "none";
+                alert("No image found.");
+            }
+        }
+        
+        async function lookupTranslation(word) {
+            const response = await fetch(`/api/dict/pons?word=${word}`);
+            const data = await response.json();
+            const translation = document.getElementById("translationResult");
+
+            if (data.translations && data.translations.length > 0) {
+                const resultArea = document.getElementById("result-area");
+                resultArea.innerHTML = "";
+
+                const table = document.createElement("table");
+                table.style.width = "100%";
+                table.style.margin = "0 auto 0 auto";
+                table.style.backgroundColor = "white";
+                table.style.tableLayout = "fixed";
+                table.style.wordWrap = "break-word";
+                table.style.borderCollapse = "collapse";
+                table.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.1)";
+
+                const headerRow = document.createElement("tr");
+                const headerCell = document.createElement("td");
+                headerCell.colSpan = 2;
+                headerCell.style.textAlign = "center";
+                headerCell.innerHTML = `
+                    <img src="/static/flags/de.png" alt="DE" style="width:32px;height:32px;border-radius:50%;vertical-align:middle;">
+                    <span style="font-size: 18px; margin: 0 10px;">→</span>
+                    <img src="/static/flags/en.png" alt="EN" style="width:32px;height:32px;border-radius:50%;vertical-align:middle;">
+                `;
+                headerRow.appendChild(headerCell);
+                table.appendChild(headerRow);
+
+                data.translations.forEach(item => {
+                    const row = document.createElement("tr");
+                    const td1 = document.createElement("td");
+                    td1.style.textAlign = "left";
+                    td1.innerHTML = item.sourceHtml || item.source;
+                    const td2 = document.createElement("td");
+                    td2.style.textAlign = "left";
+                    td2.innerHTML = item.targetHtml || item.target;
+                    td1.style.wordBreak = "break-word";
+                    td2.style.wordBreak = "break-word";
+                    td1.style.padding = "8px";
+                    td2.style.padding = "8px";
+                    td1.style.border = "1px solid #ddd";
+                    td2.style.border = "1px solid #ddd";
+                    row.appendChild(td1);
+                    row.appendChild(td2);
+                    table.appendChild(row);
+                });
+
+                document.getElementById("result-area").appendChild(table);
+                document.getElementById("result-area").style.overflowWrap = "break-word";
+
+                const acronyms = resultArea.querySelectorAll('acronym');
+                acronyms.forEach(acronym => {
+                    acronym.style.color = 'gray';
+                    acronym.style.fontStyle = 'italic'; // You can also make it italic if you need
+                });
+
+            } else {
+                translation.innerText = "No translation found.";
+            }
+        }
+
+        // Main lookup function that calls both image and translation functions
+        async function lookupWord() {
+            const word = document.getElementById("wordInput").value;
+
+            // Lookup Image first
+            await lookupImage(word);
+            console.log("Debug 2");
+
+            // Then lookup translation
+            await lookupTranslation(word);
+
+            await fetchGenaiExamples(word);
+        }
+        
+        async function fetchGenaiExamples(word) {
+            const response = await fetch(`/api/genai/examples?word=${encodeURIComponent(word)}`);
+            const data = await response.json();
+            const container = document.getElementById('openai-results');
+            container.innerHTML = "";
+            console.log(data);
+            if (data.examples) {
+                data.examples.forEach(ex => {
+                    const div = document.createElement("div");
+                    div.innerHTML = `<p>${ex.de}<br><strong>${ex.en}</strong></p>`;
+                    container.appendChild(div);
+                });
+            } else {
+                container.textContent = "No examples found.";
+            }
+        }
+
+        function playGermanAudio(text) {
+            const encodedText = encodeURIComponent(text);  // Encode the text to be used in the URL
+            // const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&q=${encodedText}&total=1&idx=0&textlen=${encodedText.length}`;
+            const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&q=Hallo&total=1&idx=0&textlen=5`
+            const audio = new Audio(audioUrl);  // Create an audio object with the fetched audio URL
+            audio.play();  // Play the audio
+        }
+
+        function celebrate() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+            });
+        }
+        
+        window.onload = function() {
+            document.getElementById("wordInput").addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault(); // Prevents form submission if input is in a form
+                    document.getElementById("searchButton").click(); // Triggers the button click
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+    <!-- TITLE AND INPUT -->
+    <h1>Deutsch Wort Insight</h1>
+    <input type="text" id="wordInput" placeholder="Enter German word">
+    <button id="searchButton" onclick="lookupWord()">Search</button>
+
+    <!-- IMAGE AND TRANSLATION -->
+    <img src="/static/icons/speaker.png" alt="Play Audio" onclick="playGermanAudio('problem')" style="width:24px;cursor:pointer;">
+    <br><br>
+    <div style="display: flex; justify-content: center; margin-top: 20px;">
+        <!-- Left Spacer -->
+        <!-- white background -->
+        <div style="flex: 1;  ">
+            <div style="background-color: white; padding: 20px; border-radius: 8px; max-width: 90%;">
+                <div id="beispiele-container"></div>
+                <div id="openai-results"></div>
+            </div>
+        </div> <!-- Left Spacer -->
+
+        <div id="result-area" style="flex: 1; text-align: center; background-color: white; padding: 10px; border-radius: 8px; max-width: 90%;">
+
+        </div> <!-- Center PONS translations -->
+
+        <div style="flex: 1; display: flex; justify-content: center;"> 
+            <div style="background-color: white; padding: 10px; border-radius: 8px; max-width: 90%;">
+                <div id="articleBlock" style="display: none; text-align: center; margin-bottom: 10px;"></div>
+                <img id="imageResult" src="" alt="Result Image" style="width: 100%; display: none; margin-bottom: 10px;">
+                <p id="translationResult" style="text-align: center;"></p>
+                <div id="beispieleBlock" style="margin-top: 20px;"></div>
+                <div id="beispiele-container"></div>
+            </div>
+        </div> <!-- Right image & translation box -->
+    </div>
+
+    <!-- FOOTER -->
+
+    <footer style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 5%;
+        background-color: #a0fdfe;
+        color: #666;
+        text-align: center;
+        font-size: 14px;
+        padding: 5px 10px;
+        border-top: 1px solid #ddd;
+        z-index: 1000;">
+        <p>
+            Powered by 
+            <a href="https://www.verbformen.de" target="_blank">Verbformen</a>, 
+            <a href="https://en.pons.com/translate" target="_blank">PONS</a>, 
+            and 
+            <a href="https://reverso.net" target="_blank">Reverso</a>.
+            Built by anhphucne - for educational purposes only.
+        </p>
+    </footer>
+</body>
+</html>
