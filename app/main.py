@@ -50,17 +50,58 @@ async def lookup(word: str):
     
     translation_text = ""
     beispiele_list = []
+    verb_conjugations = {
+        "präsens": [],
+        "präteritum": [],
+        "imperativ": [],
+        "konjunktiv_i": [],
+        "konjunktiv_ii": [],
+        "infinitiv": [],
+        "partizip": []
+    }
 
     if translation_span:
         # Extract the text, removing any HTML tags within the span
         translation_text = translation_span.get_text(separator=", ")
-
-        # Clean up extra spaces and unwanted symbols (if necessary)
         translation_text = translation_text.strip()
-        
-        # Remove empty strings
         translation_text = ", ".join(filter(None, translation_text.split(", ")))
     
+        # Find verb conjugations from tables
+        conjugation_tables = soup.find_all("div", class_="vTbl")
+        for table_div in conjugation_tables:
+            heading = table_div.find("h2", class_="wG")
+            if heading:
+                tense = heading.get_text(strip=True).lower()
+                # Map the tense to our standardized keys
+                tense_key = None
+                if "präsens" in tense:
+                    tense_key = "präsens"
+                elif "präteritum" in tense:
+                    tense_key = "präteritum"
+                elif "partizip" in tense:
+                    tense_key = "partizip"
+                
+                if tense_key:
+                    # Get the table
+                    table = table_div.find("table")
+                    if table:
+                        conjugations = []
+                        rows = table.find_all("tr")
+                        for row in rows:
+                            cells = row.find_all("td")
+                            if len(cells) >= 2:
+                                pronoun = cells[0].get_text(strip=True)
+                                verb = cells[1].get_text(strip=True)
+                                conjugations.append(f"{pronoun} {verb}")
+                            elif len(cells) == 1:
+                                verb = cells[0].get_text(strip=True)
+                                conjugations.append(verb)
+                        
+                        if conjugations:
+                            verb_conjugations[tense_key] = conjugations
+                            print(f"Found {tense_key} conjugations: {conjugations}")  # Debug print
+
+        print(verb_conjugations)
         heading = soup.find("h2", string="Beispiele")
 
         if heading:
@@ -106,6 +147,20 @@ async def lookup(word: str):
     match = re.search(r'https://www\.verbformen\.de/deklination/substantive/[^"]+\.png', html)
     dynamic_image_url = match.group(0) if match else base_image_url
 
+    # Verify if the image exists
+    try:
+        response = requests.head(dynamic_image_url)
+        if response.status_code != 200:
+            dynamic_image_url = None
+            print(f"Image not found at URL: {dynamic_image_url}")
+    except Exception as e:
+        dynamic_image_url = None
+        print(f"Error checking image URL: {e}")
+
+    # Search for MP3 sound URL - look for any MP3 file containing the word
+    sound_match = re.search(f'https://www\.verbformen\.de/deklination/substantive/grundform/[^"]+\.mp3', html)
+    word_sound = sound_match.group(0) if sound_match else None
+    print(word_sound)
     return JSONResponse(content={
         "word": encoded_word,
         "pons": {},
@@ -114,6 +169,8 @@ async def lookup(word: str):
         "translation": translation_text,
         "beispiele_list": beispiele_list,
         "article": article,
+        "word_sound": word_sound,
+        "verb_conjugations": verb_conjugations
     })
 
 @app.get("/api/dict/pons")

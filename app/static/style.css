@@ -1,13 +1,66 @@
 body {
     font-family: Arial, sans-serif;
     display: flex;
-    flex-direction : column;
+    flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
     background-color: #a81818;
-    padding-bottom: 80px;
+    padding-bottom: 100px; /* Increased padding to account for footer */
+}
+
+#content-container {
+    margin-bottom: 80px;
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+#content-container > div {
+    flex: 1;
+    min-width: 0; /* Prevents flex items from overflowing */
+}
+
+#result-area {
+    flex: 1;
+    text-align: center;
+    background-color: white;
+    padding: 10px;
+    border-radius: 8px;
+    width: 100%;
+}
+
+#beispiele-container {
+    width: 100%;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+#openai-results {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Ensure tables take full width */
+table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+/* Ensure conjugation tables maintain width */
+.conjugation-tables {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.main-conjugation-table {
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 .container {
@@ -61,22 +114,103 @@ span.info {
     font-style: italic;
 }
 
-.footer {
+footer {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: #ffffff !important;  /* changed to white background */
-    color: #333 !important;  /* darker text color for contrast */
+    height: auto;
+    background-color: #a0fdfe;
+    color: #666;
     text-align: center;
     font-size: 14px;
-    padding: 10px 20px;
-    border-top: 5px solid #ce2626;
+    padding: 10px 0;
+    border-top: 1px solid #ddd;
     z-index: 1000;
-    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* .footer a {
     color: inherit;
     text-decoration: underline;
 } */
+
+.speaker-container {
+    margin-top: 20px;
+    /* padding-left: 80%; */
+}
+
+.speaker-box {
+    background-color: white;
+    padding: 10px;
+    border-radius: 8px;
+    gap: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 10px;
+}
+
+.speaker-icon {
+    width: 4px !important;
+    /* cursor: pointer; */
+    /* filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%); */
+}
+
+.hidden {
+    display: none !important;
+}
+
+.main-conjugation-table th {
+    padding: 8px !important;
+    text-align: center !important;
+    font-size: 1.1em !important;
+    border: 1px solid #ddd !important;
+    font-weight: bold !important;
+}
+
+.main-conjugation-table th:first-child {
+    background-color: #000000 !important;
+    color: white !important;
+}
+
+.main-conjugation-table th:nth-of-type(2) {
+    background-color: #ff0000 !important;
+    color: white !important;
+}
+
+.main-conjugation-table th:nth-of-type(3) {
+    background-color: #ffd700 !important;
+    color: black !important;
+}
+
+.main-conjugation-table td {
+    padding: 6px !important;
+    text-align: left !important;
+    border: 1px solid #ddd !important;
+    font-size: 0.95em !important;
+    word-wrap: break-word !important;
+}
+
+.main-conjugation-table td:nth-child(3) {
+    font-weight: bold !important;
+}
+
+.main-conjugation-table tr:nth-child(even) {
+    background-color: #f9f9f9 !important;
+}
+
+.main-conjugation-table tr:hover {
+    background-color: #f5f5f5 !important;
+}
+
+#verbConjugations {
+    width: 90% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    padding: 10px !important;
+    background-color: white !important;
+    border-radius: 8px !important;
+    padding-left: 0px !important;
+}
