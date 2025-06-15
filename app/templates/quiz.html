@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Sentence Builder Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/quiz.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>German Sentence Builder</h1>
+            <div class="progress">
+                <span>Today: <span id="correct-count">0</span></span>
+                <span id="last-day-result" class="last-day-result"></span>
+            </div>
+        </header>
+
+        <main>
+            <div class="quiz-container">
+                <div class="english-translation" id="english-translation"></div>
+                
+                <div class="sentence-builder" id="sentence-builder">
+                    <!-- Words will be inserted here -->
+                </div>
+
+                <div class="word-bank" id="word-bank">
+                    <!-- Available words will be inserted here -->
+                </div>
+
+                <div class="controls">
+                    <button id="check-btn" class="ios-button">Check Answer</button>
+                    <button id="hint-btn" class="ios-button">Hint</button>
+                    <button id="next-btn" class="ios-button" disabled>Next</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="{{ url_for('static', path='/js/quiz.js') }}"></script>
+</body>
+</html> 

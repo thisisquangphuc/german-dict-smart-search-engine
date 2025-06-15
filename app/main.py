@@ -12,6 +12,10 @@ from urllib.parse import quote
 from bs4 import BeautifulSoup
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
+import pandas as pd
+from pathlib import Path
+import random
+import time
 
 # Load environment variables from .env file
 load_dotenv()
@@ -20,11 +24,71 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
+# Import and include routers
+from .routes.quiz import quiz_bp
+from .routes.verb_quiz import router as verb_quiz_router
+
+app.include_router(quiz_bp)
+app.include_router(verb_quiz_router)
+
 PONS_API_KEY = os.getenv("PONS_API_KEY")
+
+# Load quiz sentences
+def load_quiz_sentences():
+    try:
+        data_path = Path("resource/learn_vocab.xlsx")
+        if not data_path.exists():
+            return []
+        
+        # Read Excel file with explicit string handling
+        df = pd.read_excel(data_path, sheet_name="Sentences", dtype=str)
+        sentences = []
+        
+        for _, row in df.iterrows():
+            # Convert values to strings and handle NaN/None values
+            german = str(row["German"]).strip() if pd.notna(row["German"]) else ""
+            english = str(row["English"]).strip() if pd.notna(row["English"]) else ""
+            
+            # Ensure proper encoding of umlauts
+            german = german.encode('utf-8').decode('utf-8')
+            english = english.encode('utf-8').decode('utf-8')
+            
+            # Only add sentences where both German and English are non-empty
+            if german and english:
+                sentences.append({
+                    "german": german,
+                    "english": english
+                })
+        
+        return sentences
+    except Exception as e:
+        print(f"Error loading quiz sentences: {e}")
+        return []
+
+# Store base sentences in memory
+BASE_SENTENCES = load_quiz_sentences()
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/quiz", response_class=HTMLResponse)
+async def quiz(request: Request):
+    return templates.TemplateResponse("quiz.html", {"request": request})
+
+@app.get("/api/quiz/sentences")
+async def get_quiz_sentences():
+    try:
+        # Create a new shuffled copy for each request
+        sentences = BASE_SENTENCES.copy()
+        random.shuffle(sentences)
+        return JSONResponse(
+            content=sentences,
+            media_type="application/json; charset=utf-8"
+        )
+    except Exception as e:
+        print(f"Error serving quiz sentences: {e}")
+        return JSONResponse(content=[], status_code=500)
 
 @app.get("/api/lookup")
 async def lookup(word: str):

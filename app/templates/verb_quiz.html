@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Verb Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+            --ios-gray: #8E8E93;
+            --ios-light-gray: #F2F2F7;
+            --ios-border-radius: 10px;
+        }
+
+        body {
+            background-color: var(--ios-light-gray);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--ios-border-radius);
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .ios-button {
+            background: var(--ios-blue);
+            color: white;
+            border: none;
+            border-radius: var(--ios-border-radius);
+            padding: 12px 20px;
+            font-size: 17px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin: 8px 0;
+        }
+
+        .ios-button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .ios-button.success {
+            background: var(--ios-green);
+        }
+
+        .ios-input {
+            background: var(--ios-light-gray);
+            border: none;
+            border-radius: var(--ios-border-radius);
+            padding: 10px 4px;
+            font-size: 17px;
+            width: 100%;
+            margin: 8px 0;
+            transition: all 0.2s ease;
+        }
+
+        .ios-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--ios-blue);
+        }
+
+        .feedback {
+            margin: 10px 0;
+            font-weight: 500;
+            font-size: 15px;
+            padding: 10px;
+            border-radius: var(--ios-border-radius);
+        }
+
+        .feedback.correct {
+            color: var(--ios-green);
+            background: rgba(52, 199, 89, 0.1);
+        }
+
+        .feedback.incorrect {
+            color: var(--ios-red);
+            background: rgba(255, 59, 48, 0.1);
+        }
+
+        .verb-table {
+            margin-top: 20px;
+            display: none;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .verb-table.show {
+            display: table;
+        }
+
+        .verb-table th,
+        .verb-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--ios-light-gray);
+        }
+
+        .verb-table th {
+            font-weight: 600;
+            color: var(--ios-gray);
+        }
+
+        .sentence-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .sentence-section.show {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #000;
+        }
+
+        .input-label {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--ios-gray);
+            margin-bottom: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        /* Focus styles for accessibility */
+        *:focus {
+            outline: 2px solid var(--ios-blue);
+            outline-offset: 2px;
+        }
+
+        /* Skip link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--ios-blue);
+            color: white;
+            padding: 8px;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .ios-button,
+            .ios-input {
+                font-size: 16px;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <div class="container mt-4">
+        <div class="card">
+            <h1 class="text-center mb-4" style="font-size: 24px; font-weight: 600;">German Verb Quiz</h1>
+            
+            <!-- Step 1: Verb Forms Input -->
+            <div id="verbFormsSection">
+                <h2 class="section-title"><span id="verbMeaning"></span></h2>
+                <div class="input-group">
+                    <label for="infinitiveInput" class="input-label">Infinitive</label>
+                    <input type="text" id="infinitiveInput" class="ios-input" placeholder="Enter infinitive form" aria-label="Infinitive form">
+                </div>
+                <div id="perfectFormGroup" class="input-group" style="display: none;">
+                    <label for="perfectInput" class="input-label">Perfect</label>
+                    <input type="text" id="perfectInput" class="ios-input" placeholder="Enter perfect form" aria-label="Perfect form">
+                </div>
+                <div class="button-group" style="display: flex; gap: 10px;">
+                    <button id="hintButton" class="ios-button" style="background: var(--ios-gray);" aria-label="Get hint">Hint</button>
+                    <button id="submitVerbForms" class="ios-button" aria-label="Submit verb forms">Submit</button>
+                </div>
+                <div id="verbFormsFeedback" class="feedback" role="alert" aria-live="polite"></div>
+            </div>
+
+            <!-- Step 2: Verb Forms Table -->
+            <div id="verbTableSection" class="verb-table" role="region" aria-label="Verb forms table">
+                <h2 class="section-title">Verb Forms</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Form</th>
+                            <th scope="col">Verb</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Infinitive</td>
+                            <td id="tableInfinitive"></td>
+                        </tr>
+                        <tr id="perfectFormRow" style="display: none;">
+                            <td>Perfect</td>
+                            <td id="tablePerfect"></td>
+                        </tr>
+                        <tr>
+                            <td>ich</td>
+                            <td id="tableIch"></td>
+                        </tr>
+                        <tr>
+                            <td>du</td>
+                            <td id="tableDu"></td>
+                        </tr>
+                        <tr>
+                            <td>er/sie/es</td>
+                            <td id="tableEr"></td>
+                        </tr>
+                        <tr>
+                            <td>wir/Sie</td>
+                            <td id="tableWirSie"></td>
+                        </tr>
+                        <tr>
+                            <td>ihr</td>
+                            <td id="tableIhr"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Step 3: Sentence Section -->
+            <div id="sentenceSection" class="sentence-section" role="region" aria-label="Sentence practice">
+                <h2 class="section-title">Fill in the blank:</h2>
+                <p id="englishSentence" class="mb-2" style="font-weight: 600; text-align: center;"></p>
+                <div id="blankedSentenceContainer" class="mb-3" style="font-size: 17px; line-height: 1.5;"></div>
+                <div id="sentenceFeedback" class="feedback" role="alert" aria-live="polite"></div>
+                <button id="checkVerbForm" class="ios-button" aria-label="Check answer">Check Answer</button>
+            </div>
+
+            <!-- Step 4: Next Button Section -->
+            <div id="nextButtonSection" style="background: var(--ios-light-gray); border-radius: var(--ios-border-radius); padding: 15px; margin-top: 20px;">
+                <button id="nextVerbButton" class="ios-button success" aria-label="Go to next verb" style="background: var(--ios-green);">
+                    <span style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        Next Verb
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentVerb = null;
+        let currentSentence = null;
+        let hintCount = 0;
+
+        // Function to show confetti animation
+        function showConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // Function to show hint
+        function showHint() {
+            const feedback = document.getElementById('verbFormsFeedback');
+            hintCount++;
+            
+            if (hintCount === 1) {
+                feedback.textContent = `Hint: The infinitive form ends with 'en'`;
+                feedback.className = 'feedback';
+            } else if (hintCount === 2) {
+                feedback.textContent = `Hint: The infinitive form is '${currentVerb.infinitive}'`;
+                feedback.className = 'feedback';
+            } else if (hintCount === 3) {
+                if (currentVerb.perfect && currentVerb.perfect.trim()) {
+                    feedback.textContent = `Hint: The perfect form starts with 'ge'`;
+                    feedback.className = 'feedback';
+                } else {
+                    feedback.textContent = `All hints used. The infinitive form is '${currentVerb.infinitive}'`;
+                    feedback.className = 'feedback';
+                }
+            } else if (hintCount === 4) {
+                feedback.textContent = `All hints used. The infinitive form is '${currentVerb.infinitive}' and the perfect form is '${currentVerb.perfect}'`;
+                feedback.className = 'feedback';
+            } else {
+                feedback.textContent = `All hints used. The infinitive form is '${currentVerb.infinitive}' and the perfect form is '${currentVerb.perfect}'`;
+                feedback.className = 'feedback';
+            }
+        }
+
+        // Function to load next verb
+        async function loadNextVerb() {
+            try {
+                const response = await fetch('/api/verb-quiz/next');
+                if (!response.ok) {
+                    throw new Error('Failed to load next verb');
+                }
+                const data = await response.json();
+                
+                // Reset UI
+                document.getElementById('verbFormsSection').style.display = 'block';
+                document.getElementById('verbTableSection').style.display = 'none';
+                document.getElementById('sentenceSection').style.display = 'none';
+                document.getElementById('verbFormsFeedback').textContent = '';
+                document.getElementById('sentenceFeedback').textContent = '';
+                document.getElementById('infinitiveInput').value = '';
+                document.getElementById('perfectInput').value = '';
+                document.getElementById('blankedSentenceContainer').innerHTML = '';
+                hintCount = 0;  // Reset hint count
+
+                // Update UI with new verb
+                currentVerb = data.verb;
+                currentSentence = data.sentence;
+                document.getElementById('verbMeaning').textContent = currentVerb.meaning;
+                
+                // Show/hide perfect form input based on verb data
+                const perfectFormGroup = document.getElementById('perfectFormGroup');
+                if (data.has_perfect_form) {
+                    perfectFormGroup.style.display = 'block';
+                } else {
+                    perfectFormGroup.style.display = 'none';
+                }
+                
+                document.getElementById('infinitiveInput').focus();
+            } catch (error) {
+                console.error('Error loading next verb:', error);
+                document.getElementById('verbFormsFeedback').textContent = 'Error loading next verb. Please try again.';
+                document.getElementById('verbFormsFeedback').className = 'feedback incorrect';
+            }
+        }
+
+        // Function to check verb forms
+        function checkVerbForms() {
+            const infinitive = document.getElementById('infinitiveInput').value.trim().toLowerCase();
+            const feedback = document.getElementById('verbFormsFeedback');
+            const perfectFormGroup = document.getElementById('perfectFormGroup');
+
+            // Check if perfect form is required
+            const needsPerfectForm = perfectFormGroup.style.display !== 'none';
+            let perfect = '';
+            if (needsPerfectForm) {
+                perfect = document.getElementById('perfectInput').value.trim().toLowerCase();
+            }
+
+            // Check infinitive form
+            if (infinitive !== currentVerb.infinitive.toLowerCase()) {
+                feedback.textContent = "Oops, that's not quite right. Try again!";
+                feedback.className = 'feedback incorrect';
+                document.getElementById('infinitiveInput').focus();
+                return;
+            }
+
+            // Check perfect form if required
+            if (needsPerfectForm && perfect !== currentVerb.perfect.toLowerCase()) {
+                feedback.textContent = "The infinitive is correct, but the perfect form is not quite right. Try again!";
+                feedback.className = 'feedback incorrect';
+                document.getElementById('perfectInput').focus();
+                return;
+            }
+
+            // All checks passed
+            feedback.textContent = "Great job! You're a verb master!";
+            feedback.className = 'feedback correct';
+            showConfetti();
+
+            // Show verb forms table
+            document.getElementById('tableInfinitive').textContent = currentVerb.infinitive;
+            
+            // Handle perfect form display
+            const perfectFormRow = document.getElementById('perfectFormRow');
+            if (currentVerb.perfect && currentVerb.perfect.trim() !== '') {
+                document.getElementById('tablePerfect').textContent = currentVerb.perfect;
+                perfectFormRow.style.display = 'table-row';
+            } else {
+                perfectFormRow.style.display = 'none';
+            }
+            
+            document.getElementById('tableIch').textContent = currentVerb.ich;
+            document.getElementById('tableDu').textContent = currentVerb.du;
+            document.getElementById('tableEr').textContent = currentVerb.er;
+            document.getElementById('tableWirSie').textContent = currentVerb.wir_sie;
+            document.getElementById('tableIhr').textContent = currentVerb.ihr;
+            document.getElementById('verbTableSection').style.display = 'table';
+
+            // Show sentence section if available
+            if (currentSentence) {
+                document.getElementById('englishSentence').textContent = currentSentence.english;
+                
+                // Create the blanked sentence with input box
+                const container = document.getElementById('blankedSentenceContainer');
+                const parts = currentSentence.blanked_sentence.split('____');
+                container.innerHTML = '';
+                
+                // Add first part
+                if (parts[0]) {
+                    container.appendChild(document.createTextNode(parts[0]));
+                }
+                
+                // Add input box
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = 'verbFormInput';
+                input.className = 'ios-input';
+                // Calculate width based on the correct form length
+                const correctFormLength = currentSentence.correct_form.length;
+                const minWidth = 60; // Minimum width in pixels
+                const charWidth = 8; // Approximate width per character in pixels
+                const padding = 16; // Total horizontal padding
+                const width = Math.max(minWidth, (correctFormLength * charWidth) + padding);
+                input.style.width = `${width}px`;
+                input.style.display = 'inline-block';
+                input.style.margin = '0 4px';
+                input.style.verticalAlign = 'middle';
+                input.placeholder = 'Type here';
+                input.setAttribute('aria-label', 'Missing verb form');
+                container.appendChild(input);
+                
+                // Add second part
+                if (parts[1]) {
+                    container.appendChild(document.createTextNode(parts[1]));
+                }
+                
+                document.getElementById('sentenceSection').style.display = 'block';
+                // Focus translation input
+                setTimeout(() => {
+                    document.getElementById('verbFormInput').focus();
+                }, 100);
+            }
+        }
+
+        // Function to check translation
+        function checkTranslation() {
+            const translation = document.getElementById('verbFormInput').value.trim().toLowerCase();
+            const feedback = document.getElementById('sentenceFeedback');
+            const nextButtonSection = document.getElementById('nextButtonSection');
+
+            if (translation === currentSentence.correct_form.toLowerCase()) {
+                feedback.innerHTML = `
+                    <div style="color: var(--ios-green); margin-top: 10px;">
+                        <p class="mb-0">${currentSentence.german}</p>
+                    </div>
+                `;
+                showConfetti();
+                document.getElementById('verbFormInput').disabled = true;
+            } else {
+                feedback.innerHTML = `
+                    <div style="color: var(--ios-red); margin-top: 10px;">
+                        <p class="mb-0">Incorrect. Try again!</p>
+                        <p class="mb-0">Hint: Look at the verb forms table above.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('submitVerbForms').addEventListener('click', checkVerbForms);
+        document.getElementById('checkVerbForm').addEventListener('click', checkTranslation);
+        document.getElementById('nextVerbButton').addEventListener('click', loadNextVerb);
+        document.getElementById('hintButton').addEventListener('click', showHint);
+
+        // Add keyboard support
+        document.getElementById('infinitiveInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkVerbForms();
+            }
+        });
+
+        document.getElementById('perfectInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkVerbForms();
+            }
+        });
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && document.getElementById('verbFormInput')) {
+                checkTranslation();
+            }
+        });
+
+        // Load first verb when page loads
+        window.addEventListener('load', loadNextVerb);
+    </script>
+</body>
+</html> 
