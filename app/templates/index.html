@@ -8,241 +8,291 @@
     <script>
         // Function to fetch and display the image result
         async function lookupImage(word) {
-            const response = await fetch(`/api/lookup?word=${word}`);
-            const data = await response.json();
-            const img = document.getElementById("imageResult");
-            const contentContainer = document.getElementById("content-container");
-            const speakerContainer = document.querySelector(".speaker-icon");
-            const verbConjugations = document.getElementById("verbConjugations");
-            const audioPlayer = document.getElementById("audioPlayer");
-
-            // Show containers
-            contentContainer.classList.remove("hidden");
-            
-            // Handle audio
-            if (data.word_sound) {
-                console.log("Setting audio source:", data.word_sound);
-                audioPlayer.src = data.word_sound;
-                speakerContainer.classList.remove("hidden");
-            } else {
-                console.log("No audio found");
-                speakerContainer.classList.add("hidden");
-            }
-
-            if (data.verb_image_url) {
-                celebrate();
-                // Display article above the image
-                const articleBlock = document.getElementById("articleBlock");
-                if (data.article) {
-                    articleBlock.innerText = data.article;
-                    articleBlock.style.display = "block";
-                    articleBlock.style.fontSize = "50px";
-                    articleBlock.style.fontWeight = "bold";
-                    articleBlock.style.color = data.article === "der" ? "#1e90ff" :
-                                               data.article === "die" ? "#dc143c" :
-                                               data.article === "das" ? "#ffa500" : "#333";
-                } else {
-                    articleBlock.style.display = "none";
+            try {
+                const response = await fetch(`/api/lookup?word=${word}`);
+                if (!response.ok) {
+                    console.error("Failed to fetch image data");
+                    return;
                 }
-
-                // Create image element
+                const data = await response.json();
+                
+                // Get all required elements
+                const img = document.getElementById("imageResult");
+                const contentContainer = document.getElementById("content-container");
+                const speakerContainer = document.querySelector(".speaker-icon");
+                const verbConjugations = document.getElementById("verbConjugations");
+                const audioPlayer = document.getElementById("audioPlayer");
                 const imageContainer = document.getElementById("imageContainer");
-                imageContainer.innerHTML = ''; // Clear any existing image
-                const img = document.createElement("img");
-                img.id = "imageResult";
-                img.alt = "Result Image";
-                img.style.width = "100%";
-                img.style.marginBottom = "10px";
-                img.src = data.verb_image_url;
-                imageContainer.appendChild(img);
-                imageContainer.classList.remove("hidden");
-            } else {
-                console.log("No image found.");
-                // Only hide the image container
-                document.getElementById("imageContainer").classList.add("hidden");
-            }
+                const articleBlock = document.getElementById("articleBlock");
+                const translationResult = document.getElementById("translationResult");
+                const beispieleBlock = document.getElementById("beispieleBlock");
+                const beispieleContainer = document.getElementById("beispiele-container");
 
-            // Always show translation and examples
-            const translationResult = document.getElementById("translationResult");
-            translationResult.innerHTML = `<h3 style="text-align: center; color: #333; margin-bottom: 15px;">Translations</h3>${data.translation}`;
-            translationResult.style.display = "block";
-
-            // Insert Beispiele block
-            const beispieleBlock = document.getElementById("beispieleBlock");
-            const beispieleContainer = document.getElementById("beispiele-container");
-
-            // --- Replace Beispiele block ---
-            beispieleContainer.innerHTML = ""; // Clear existing examples
-
-            if (data.beispiele_list && data.beispiele_list.length > 0) {
-                const title = document.createElement("h3");
-                title.style.textAlign = "center";
-                title.style.color = "#333";
-                title.style.marginBottom = "15px";
-                title.textContent = "Examples";
-                beispieleContainer.appendChild(title);
-
-                const ul = document.createElement("ul");
-                ul.style.listStyle = "none";
-                ul.style.padding = "0";
-
-                data.beispiele_list.forEach(example => {
-                    const li = document.createElement("li");
-                    li.style.marginBottom = "10px";
-
-                    li.innerHTML = `
-                        <strong>${example.de}</strong><br>
-                        <img src="/static/flags/en.png" alt="EN" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;">
-                        ${example.en}
-                    `;
-
-                    ul.appendChild(li);
-                });
-
-                beispieleContainer.appendChild(ul);
-                beispieleBlock.style.display = "block";
-            } else {
-                beispieleBlock.innerHTML = "<p>No examples found.</p>";
-            }
-            // --- End Replace Beispiele block ---
-
-            // Handle verb conjugations separately
-            if (data.verb_conjugations && Object.keys(data.verb_conjugations).length > 0) {
-                const tablesContainer = document.querySelector(".conjugation-tables");
-                tablesContainer.innerHTML = ""; // Clear existing tables
-
-                // Create main table
-                const mainTable = document.createElement("table");
-                mainTable.className = "main-conjugation-table";
-                mainTable.style.width = "100%";
-
-                // Create header row
-                const headerRow = document.createElement("tr");
-                const tenses = ["präsens", "präteritum", "partizip"];
-                tenses.forEach((tense, index) => {
-                    const th = document.createElement("th");
-                    th.textContent = tense.charAt(0).toUpperCase() + tense.slice(1);
-                    th.style.backgroundColor = index === 0 ? "#ff0000" : 
-                                             index === 1 ? "#000000" : 
-                                             "#ffd700";
-                    th.style.color = index === 2 ? "black" : "white";
-                    headerRow.appendChild(th);
-                });
-                mainTable.appendChild(headerRow);
-
-                // Get max length of conjugations
-                const maxLength = Math.max(
-                    data.verb_conjugations.präsens?.length || 0,
-                    data.verb_conjugations.präteritum?.length || 0,
-                    data.verb_conjugations.partizip?.length || 0
-                );
-
-                // Create rows for each conjugation
-                for (let i = 0; i < maxLength; i++) {
-                    const row = document.createElement("tr");
-                    tenses.forEach(tense => {
-                        const td = document.createElement("td");
-                        // Map the tense to the correct key in verb_conjugations
-                        let conjugations;
-                        if (tense === "präteritum") {
-                            conjugations = data.verb_conjugations.präteritum || [];
-                        } else if (tense === "partizip") {
-                            conjugations = data.verb_conjugations.partizip || [];
-                        } else {
-                            conjugations = data.verb_conjugations[tense] || [];
-                        }
-                        td.textContent = conjugations[i] || "";
-                        row.appendChild(td);
-                    });
-                    mainTable.appendChild(row);
+                // Check if required containers exist
+                if (!contentContainer) {
+                    console.error("Content container not found");
+                    return;
                 }
 
-                tablesContainer.appendChild(mainTable);
-                document.getElementById("verbConjugations").classList.remove("hidden");
-            } else {
-                document.getElementById("verbConjugations").classList.add("hidden");
+                // Show containers
+                contentContainer.classList.remove("hidden");
+                
+                // Handle audio
+                if (audioPlayer && speakerContainer) {
+                    if (data.word_sound) {
+                        console.log("Setting audio source:", data.word_sound);
+                        audioPlayer.src = data.word_sound;
+                        speakerContainer.classList.remove("hidden");
+                    } else {
+                        console.log("No audio found");
+                        speakerContainer.classList.add("hidden");
+                    }
+                }
+
+                // Handle image
+                if (imageContainer) {
+                    if (data.verb_image_url) {
+                        celebrate();
+                        // Display article above the image
+                        if (articleBlock) {
+                            if (data.article) {
+                                articleBlock.innerText = data.article;
+                                articleBlock.style.display = "block";
+                                articleBlock.style.fontSize = "50px";
+                                articleBlock.style.fontWeight = "bold";
+                                articleBlock.style.color = data.article === "der" ? "#1e90ff" :
+                                                        data.article === "die" ? "#dc143c" :
+                                                        data.article === "das" ? "#ffa500" : "#333";
+                            } else {
+                                articleBlock.style.display = "none";
+                            }
+                        }
+
+                        // Create image element
+                        imageContainer.innerHTML = ''; // Clear any existing image
+                        const img = document.createElement("img");
+                        img.id = "imageResult";
+                        img.alt = "Result Image";
+                        img.style.width = "100%";
+                        img.style.marginBottom = "10px";
+                        img.src = data.verb_image_url;
+                        imageContainer.appendChild(img);
+                        imageContainer.classList.remove("hidden");
+                    } else {
+                        console.log("No image found.");
+                        imageContainer.classList.add("hidden");
+                    }
+                }
+
+                // Handle translation
+                if (translationResult) {
+                    translationResult.innerHTML = `<h3 style="text-align: center; color: #333; margin-bottom: 15px;">Translations</h3>${data.translation || ''}`;
+                    translationResult.style.display = "block";
+                }
+
+                // Handle examples
+                if (beispieleBlock && beispieleContainer) {
+                    beispieleContainer.innerHTML = ""; // Clear existing examples
+
+                    if (data.beispiele_list && data.beispiele_list.length > 0) {
+                        const title = document.createElement("h3");
+                        title.style.textAlign = "center";
+                        title.style.color = "#333";
+                        title.style.marginBottom = "15px";
+                        title.textContent = "Examples";
+                        beispieleContainer.appendChild(title);
+
+                        const ul = document.createElement("ul");
+                        ul.style.listStyle = "none";
+                        ul.style.padding = "0";
+
+                        data.beispiele_list.forEach(example => {
+                            const li = document.createElement("li");
+                            li.style.marginBottom = "10px";
+
+                            li.innerHTML = `
+                                <strong>${example.de}</strong><br>
+                                <img src="/static/flags/en.png" alt="EN" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;">
+                                ${example.en}
+                            `;
+
+                            ul.appendChild(li);
+                        });
+
+                        beispieleContainer.appendChild(ul);
+                        beispieleBlock.style.display = "block";
+                    } else {
+                        beispieleBlock.style.display = "none";
+                    }
+                }
+
+                // Handle verb conjugations
+                if (verbConjugations) {
+                    if (data.verb_conjugations && Object.keys(data.verb_conjugations).length > 0) {
+                        const tablesContainer = document.querySelector(".conjugation-tables");
+                        if (tablesContainer) {
+                            tablesContainer.innerHTML = ""; // Clear existing tables
+
+                            // Create main table
+                            const mainTable = document.createElement("table");
+                            mainTable.className = "main-conjugation-table";
+                            mainTable.style.width = "100%";
+
+                            // Create header row
+                            const headerRow = document.createElement("tr");
+                            const tenses = ["präsens", "präteritum", "partizip"];
+                            tenses.forEach((tense, index) => {
+                                const th = document.createElement("th");
+                                th.textContent = tense.charAt(0).toUpperCase() + tense.slice(1);
+                                th.style.backgroundColor = index === 0 ? "#ff0000" : 
+                                                        index === 1 ? "#000000" : 
+                                                        "#ffd700";
+                                th.style.color = index === 2 ? "black" : "white";
+                                headerRow.appendChild(th);
+                            });
+                            mainTable.appendChild(headerRow);
+
+                            // Get max length of conjugations
+                            const maxLength = Math.max(
+                                data.verb_conjugations.präsens?.length || 0,
+                                data.verb_conjugations.präteritum?.length || 0,
+                                data.verb_conjugations.partizip?.length || 0
+                            );
+
+                            // Create rows for each conjugation
+                            for (let i = 0; i < maxLength; i++) {
+                                const row = document.createElement("tr");
+                                tenses.forEach(tense => {
+                                    const td = document.createElement("td");
+                                    let conjugations;
+                                    if (tense === "präteritum") {
+                                        conjugations = data.verb_conjugations.präteritum || [];
+                                    } else if (tense === "partizip") {
+                                        conjugations = data.verb_conjugations.partizip || [];
+                                    } else {
+                                        conjugations = data.verb_conjugations[tense] || [];
+                                    }
+                                    td.textContent = conjugations[i] || "";
+                                    row.appendChild(td);
+                                });
+                                mainTable.appendChild(row);
+                            }
+
+                            tablesContainer.appendChild(mainTable);
+                        }
+                        verbConjugations.classList.remove("hidden");
+                    } else {
+                        verbConjugations.classList.add("hidden");
+                    }
+                }
+            } catch (error) {
+                console.error("Error in lookupImage:", error);
             }
         }
         
         async function lookupTranslation(word) {
-            const response = await fetch(`/api/dict/pons?word=${word}`);
-            // check if response is ok
-            if (!response.ok) {
-                alert("Failed to fetch data from PONS API");
-                return;
-            }
-            const data = await response.json();
-            const translation = document.getElementById("translationResult");
-            const resultArea = document.getElementById("result-area");
-            resultArea.innerHTML = ""; // Clear previous results
+            try {
+                const response = await fetch(`/api/dict/pons?word=${word}`);
+                if (!response.ok) {
+                    console.error("Failed to fetch data from PONS API");
+                    return;
+                }
+                const data = await response.json();
+                const resultArea = document.getElementById("result-area");
+                if (!resultArea) {
+                    console.error("Result area element not found");
+                    return;
+                }
 
-            if (data.translations && data.translations.length > 0) {
-                const table = document.createElement("table");
-                table.style.width = "100%";
-                table.style.margin = "0 auto 0 auto";
-                table.style.backgroundColor = "white";
-                table.style.tableLayout = "fixed";
-                table.style.wordWrap = "break-word";
-                table.style.borderCollapse = "collapse";
-                table.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.1)";
+                resultArea.innerHTML = ""; // Clear previous results
 
-                const headerRow = document.createElement("tr");
-                const headerCell = document.createElement("td");
-                headerCell.colSpan = 2;
-                headerCell.style.textAlign = "center";
-                headerCell.innerHTML = `
-                    <img src="/static/flags/de.png" alt="DE" style="width:32px;height:32px;border-radius:50%;vertical-align:middle;">
-                    <span style="font-size: 18px; margin: 0 10px;">→</span>
-                    <img src="/static/flags/en.png" alt="EN" style="width:32px;height:32px;border-radius:50%;vertical-align:middle;">
-                `;
-                headerRow.appendChild(headerCell);
-                table.appendChild(headerRow);
+                if (data.result) {
+                    const resultData = JSON.parse(data.result);
+                    if (resultData.translations && resultData.translations.length > 0) {
+                        const table = document.createElement("table");
+                        table.style.width = "100%";
+                        table.style.margin = "0 auto 0 auto";
+                        table.style.backgroundColor = "white";
+                        table.style.tableLayout = "fixed";
+                        table.style.wordWrap = "break-word";
+                        table.style.borderCollapse = "collapse";
+                        table.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.1)";
 
-                data.translations.forEach(item => {
-                    const row = document.createElement("tr");
-                    const td1 = document.createElement("td");
-                    td1.style.textAlign = "left";
-                    td1.innerHTML = item.sourceHtml || item.source;
-                    const td2 = document.createElement("td");
-                    td2.style.textAlign = "left";
-                    td2.innerHTML = item.targetHtml || item.target;
-                    td1.style.wordBreak = "break-word";
-                    td2.style.wordBreak = "break-word";
-                    td1.style.padding = "8px";
-                    td2.style.padding = "8px";
-                    td1.style.border = "1px solid #ddd";
-                    td2.style.border = "1px solid #ddd";
-                    row.appendChild(td1);
-                    row.appendChild(td2);
-                    table.appendChild(row);
-                });
+                        const headerRow = document.createElement("tr");
+                        const headerCell = document.createElement("td");
+                        headerCell.colSpan = 2;
+                        headerCell.style.textAlign = "center";
+                        headerCell.innerHTML = `
+                            <img src="/static/flags/de.png" alt="DE" style="width:32px;height:32px;border-radius:50%;vertical-align:middle;">
+                            <span style="font-size: 18px; margin: 0 10px;">→</span>
+                            <img src="/static/flags/en.png" alt="EN" style="width:32px;height:32px;border-radius:50%;vertical-align:middle;">
+                        `;
+                        headerRow.appendChild(headerCell);
+                        table.appendChild(headerRow);
 
-                document.getElementById("result-area").appendChild(table);
-                document.getElementById("result-area").style.overflowWrap = "break-word";
+                        resultData.translations.forEach(item => {
+                            const row = document.createElement("tr");
+                            const td1 = document.createElement("td");
+                            td1.style.textAlign = "left";
+                            td1.innerHTML = item.sourceHtml || item.source;
+                            const td2 = document.createElement("td");
+                            td2.style.textAlign = "left";
+                            td2.innerHTML = item.targetHtml || item.target;
+                            td1.style.wordBreak = "break-word";
+                            td2.style.wordBreak = "break-word";
+                            td1.style.padding = "8px";
+                            td2.style.padding = "8px";
+                            td1.style.border = "1px solid #ddd";
+                            td2.style.border = "1px solid #ddd";
+                            row.appendChild(td1);
+                            row.appendChild(td2);
+                            table.appendChild(row);
+                        });
 
-                const acronyms = resultArea.querySelectorAll('acronym');
-                acronyms.forEach(acronym => {
-                    acronym.style.color = 'gray';
-                    acronym.style.fontStyle = 'italic'; // You can also make it italic if you need
-                });
+                        resultArea.appendChild(table);
+                        resultArea.style.overflowWrap = "break-word";
 
-            } else {
-                translation.innerText = "No translation found.";
+                        const acronyms = resultArea.querySelectorAll('acronym');
+                        acronyms.forEach(acronym => {
+                            acronym.style.color = 'gray';
+                            acronym.style.fontStyle = 'italic';
+                        });
+                    } else {
+                        resultArea.innerHTML = "<p style='text-align: center; color: #666;'>No translation found.</p>";
+                    }
+                } else {
+                    resultArea.innerHTML = "<p style='text-align: center; color: #666;'>No translation data available.</p>";
+                }
+            } catch (error) {
+                console.error("Error in lookupTranslation:", error);
+                const resultArea = document.getElementById("result-area");
+                if (resultArea) {
+                    resultArea.innerHTML = "<p style='text-align: center; color: #ff0000;'>An error occurred while fetching the translation.</p>";
+                }
             }
         }
 
         // Main lookup function that calls both image and translation functions
         async function lookupWord() {
-            const word = document.getElementById("wordInput").value;
+            try {
+                const word = document.getElementById("wordInput").value;
+                if (!word) {
+                    alert("Please enter a word to look up");
+                    return;
+                }
 
-            // Lookup Image first
-            await lookupImage(word);
-            console.log("Debug 2");
+                // Lookup Image first
+                await lookupImage(word);
+                console.log("Debug 2");
 
-            // Then lookup translation
-            await lookupTranslation(word);
+                // Then lookup translation
+                await lookupTranslation(word);
 
-            await fetchGenaiExamples(word);
+                await fetchGenaiExamples(word);
+            } catch (error) {
+                console.error("Error in lookupWord:", error);
+                // alert("An error occurred while looking up the word. Please try again.");
+            }
         }
         
         async function fetchGenaiExamples(word) {

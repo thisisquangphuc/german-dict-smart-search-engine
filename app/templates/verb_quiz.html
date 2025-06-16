@@ -257,7 +257,10 @@
                 <p id="englishSentence" class="mb-2" style="font-weight: 600; text-align: center;"></p>
                 <div id="blankedSentenceContainer" class="mb-3" style="font-size: 17px; line-height: 1.5;"></div>
                 <div id="sentenceFeedback" class="feedback" role="alert" aria-live="polite"></div>
-                <button id="checkVerbForm" class="ios-button" aria-label="Check answer">Check Answer</button>
+                <div class="button-group" style="display: flex; gap: 10px;">
+                    <button id="sentenceHintButton" class="ios-button" style="background: var(--ios-gray);" aria-label="Get hint for sentence">Hint</button>
+                    <button id="checkVerbForm" class="ios-button" aria-label="Check answer">Check Answer</button>
+                </div>
             </div>
 
             <!-- Step 4: Next Button Section -->
@@ -293,27 +296,116 @@
             const feedback = document.getElementById('verbFormsFeedback');
             hintCount++;
             
-            if (hintCount === 1) {
-                feedback.textContent = `Hint: The infinitive form ends with 'en'`;
-                feedback.className = 'feedback';
-            } else if (hintCount === 2) {
-                feedback.textContent = `Hint: The infinitive form is '${currentVerb.infinitive}'`;
-                feedback.className = 'feedback';
-            } else if (hintCount === 3) {
-                if (currentVerb.perfect && currentVerb.perfect.trim()) {
-                    feedback.textContent = `Hint: The perfect form starts with 'ge'`;
-                    feedback.className = 'feedback';
+            console.log('=== Hint Debug Info ===');
+            console.log('Hint Count:', hintCount);
+            console.log('Current Verb:', currentVerb);
+            
+            function getHintForWord(word, hintLevel) {
+                const length = word.length;
+                console.log(`\nProcessing word: "${word}"`);
+                console.log('Word length:', length);
+                console.log('Hint level:', hintLevel);
+                
+                let result;
+                if (length > 9) {
+                    if (hintLevel === 1) {
+                        // First hint: show 4 middle letters
+                        const start = Math.floor((length - 4) / 2);
+                        const visiblePart = word.substring(start, start + 4);
+                        const beforePart = '_'.repeat(start);
+                        const afterPart = '_'.repeat(length - start - 4);
+                        result = beforePart + visiblePart + afterPart;
+                        console.log('Long word (>9) - Hint 1: Showing 4 middle letters');
+                    } else if (hintLevel === 2) {
+                        // Second hint: show 6 middle letters
+                        const start = Math.floor((length - 6) / 2);
+                        const visiblePart = word.substring(start, start + 6);
+                        const beforePart = '_'.repeat(start);
+                        const afterPart = '_'.repeat(length - start - 6);
+                        result = beforePart + visiblePart + afterPart;
+                        console.log('Long word (>9) - Hint 2: Showing 6 middle letters');
+                    } else {
+                        // Third hint: show 8 middle letters
+                        const start = Math.floor((length - 8) / 2);
+                        const visiblePart = word.substring(start, start + 8);
+                        const beforePart = '_'.repeat(start);
+                        const afterPart = '_'.repeat(length - start - 8);
+                        result = beforePart + visiblePart + afterPart;
+                        console.log('Long word (>9) - Hint 3: Showing 8 middle letters');
+                    }
+                } else if (length > 4) {
+                    if (hintLevel === 1) {
+                        // First hint: show 2 middle letters
+                        const start = Math.floor((length - 2) / 2);
+                        const visiblePart = word.substring(start, start + 2);
+                        const beforePart = '_'.repeat(start);
+                        const afterPart = '_'.repeat(length - start - 2);
+                        result = beforePart + visiblePart + afterPart;
+                        console.log('Medium word (5-9) - Hint 1: Showing 2 middle letters');
+                    } else if (hintLevel === 2) {
+                        // Second hint: show 3 middle letters
+                        const start = Math.floor((length - 3) / 2);
+                        const visiblePart = word.substring(start, start + 3);
+                        const beforePart = '_'.repeat(start);
+                        const afterPart = '_'.repeat(length - start - 3);
+                        result = beforePart + visiblePart + afterPart;
+                        console.log('Medium word (5-9) - Hint 2: Showing 3 middle letters');
+                    } else {
+                        // Third hint: show 4 middle letters
+                        const start = Math.floor((length - 4) / 2);
+                        const visiblePart = word.substring(start, start + 4);
+                        const beforePart = '_'.repeat(start);
+                        const afterPart = '_'.repeat(length - start - 4);
+                        result = beforePart + visiblePart + afterPart;
+                        console.log('Medium word (5-9) - Hint 3: Showing 4 middle letters');
+                    }
                 } else {
-                    feedback.textContent = `All hints used. The infinitive form is '${currentVerb.infinitive}'`;
-                    feedback.className = 'feedback';
+                    if (hintLevel === 1) {
+                        // First hint: show last 2 letters
+                        const visiblePart = word.substring(length - 2);
+                        const hiddenPart = '_'.repeat(length - 2);
+                        result = hiddenPart + visiblePart;
+                        console.log('Short word (≤4) - Hint 1: Showing last 2 letters');
+                    } else if (hintLevel === 2) {
+                        // Second hint: show last 3 letters
+                        const visiblePart = word.substring(length - 3);
+                        const hiddenPart = '_'.repeat(length - 3);
+                        result = hiddenPart + visiblePart;
+                        console.log('Short word (≤4) - Hint 2: Showing last 3 letters');
+                    } else {
+                        // Third hint: show all but first letter
+                        const visiblePart = word.substring(1);
+                        result = word[0] + '_'.repeat(length - 1);
+                        console.log('Short word (≤4) - Hint 3: Showing all but first letter');
+                    }
                 }
-            } else if (hintCount === 4) {
-                feedback.textContent = `All hints used. The infinitive form is '${currentVerb.infinitive}' and the perfect form is '${currentVerb.perfect}'`;
+                console.log('Result:', result);
+                return result;
+            }
+
+            if (hintCount <= 3) {
+                const infinitiveHint = getHintForWord(currentVerb.infinitive, hintCount);
+                let hintText = `Hint ${hintCount}/3: The infinitive form looks like: ${infinitiveHint}`;
+                
+                if (currentVerb.perfect && currentVerb.perfect.trim()) {
+                    const perfectHint = getHintForWord(currentVerb.perfect, hintCount);
+                    hintText += `\nThe perfect form looks like: ${perfectHint}`;
+                }
+                
+                console.log('\nFinal Hint Text:', hintText);
+                feedback.textContent = hintText;
                 feedback.className = 'feedback';
             } else {
-                feedback.textContent = `All hints used. The infinitive form is '${currentVerb.infinitive}' and the perfect form is '${currentVerb.perfect}'`;
+                // After 3 hints, show the complete answer
+                let answerText = `The infinitive form is '${currentVerb.infinitive}'`;
+                if (currentVerb.perfect && currentVerb.perfect.trim()) {
+                    answerText += ` and the perfect form is '${currentVerb.perfect}'`;
+                }
+                console.log('\nShowing complete answer:', answerText);
+                feedback.textContent = answerText;
                 feedback.className = 'feedback';
             }
+            console.log('=== End Hint Debug Info ===\n');
         }
 
         // Function to load next verb
@@ -343,7 +435,7 @@
                 
                 // Show/hide perfect form input based on verb data
                 const perfectFormGroup = document.getElementById('perfectFormGroup');
-                if (data.has_perfect_form) {
+                if (data.has_perfect_form && currentVerb.perfect && !currentVerb.perfect.includes('#ERROR!')) {
                     perfectFormGroup.style.display = 'block';
                 } else {
                     perfectFormGroup.style.display = 'none';
@@ -363,8 +455,10 @@
             const feedback = document.getElementById('verbFormsFeedback');
             const perfectFormGroup = document.getElementById('perfectFormGroup');
 
-            // Check if perfect form is required
-            const needsPerfectForm = perfectFormGroup.style.display !== 'none';
+            // Check if perfect form is required and valid
+            const needsPerfectForm = perfectFormGroup.style.display !== 'none' && 
+                                   currentVerb.perfect && 
+                                   !currentVerb.perfect.includes('#ERROR!');
             let perfect = '';
             if (needsPerfectForm) {
                 perfect = document.getElementById('perfectInput').value.trim().toLowerCase();
@@ -378,7 +472,7 @@
                 return;
             }
 
-            // Check perfect form if required
+            // Check perfect form if required and valid
             if (needsPerfectForm && perfect !== currentVerb.perfect.toLowerCase()) {
                 feedback.textContent = "The infinitive is correct, but the perfect form is not quite right. Try again!";
                 feedback.className = 'feedback incorrect';
@@ -396,7 +490,7 @@
             
             // Handle perfect form display
             const perfectFormRow = document.getElementById('perfectFormRow');
-            if (currentVerb.perfect && currentVerb.perfect.trim() !== '') {
+            if (currentVerb.perfect && currentVerb.perfect.trim() !== '' && !currentVerb.perfect.includes('#ERROR!')) {
                 document.getElementById('tablePerfect').textContent = currentVerb.perfect;
                 perfectFormRow.style.display = 'table-row';
             } else {
@@ -470,6 +564,10 @@
                 `;
                 showConfetti();
                 document.getElementById('verbFormInput').disabled = true;
+                // Focus the next button after correct answer
+                setTimeout(() => {
+                    document.getElementById('nextVerbButton').focus();
+                }, 100);
             } else {
                 feedback.innerHTML = `
                     <div style="color: var(--ios-red); margin-top: 10px;">
@@ -480,11 +578,29 @@
             }
         }
 
+        // Function to show sentence hint
+        function showSentenceHint() {
+            const feedback = document.getElementById('sentenceFeedback');
+            feedback.innerHTML = `
+                <div style="color: var(--ios-gray); margin-top: 10px;">
+                    <p class="mb-0">The correct form is: ${currentSentence.correct_form}</p>
+                    <p class="mb-0">${currentSentence.german}</p>
+                </div>
+            `;
+            document.getElementById('verbFormInput').value = currentSentence.correct_form;
+            document.getElementById('verbFormInput').disabled = true;
+            // Focus the next button after showing hint
+            setTimeout(() => {
+                document.getElementById('nextVerbButton').focus();
+            }, 100);
+        }
+
         // Event Listeners
         document.getElementById('submitVerbForms').addEventListener('click', checkVerbForms);
         document.getElementById('checkVerbForm').addEventListener('click', checkTranslation);
         document.getElementById('nextVerbButton').addEventListener('click', loadNextVerb);
         document.getElementById('hintButton').addEventListener('click', showHint);
+        document.getElementById('sentenceHintButton').addEventListener('click', showSentenceHint);
 
         // Add keyboard support
         document.getElementById('infinitiveInput').addEventListener('keypress', (e) => {
@@ -501,7 +617,12 @@
 
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && document.getElementById('verbFormInput')) {
-                checkTranslation();
+                if (document.getElementById('verbFormInput').disabled) {
+                    // If input is disabled (correct answer or hint shown), go to next verb
+                    loadNextVerb();
+                } else {
+                    checkTranslation();
+                }
             }
         });
 

@@ -27,9 +27,15 @@ templates = Jinja2Templates(directory="app/templates")
 # Import and include routers
 from .routes.quiz import quiz_bp
 from .routes.verb_quiz import router as verb_quiz_router
+from .routes.dictionary import router as dictionary_router
+from .database import init_db
+
+# Initialize database
+init_db()
 
 app.include_router(quiz_bp)
 app.include_router(verb_quiz_router)
+app.include_router(dictionary_router)
 
 PONS_API_KEY = os.getenv("PONS_API_KEY")
 

@@ -192,3 +192,7 @@ ENV/
 
 # Docker
 .docker/
+
+
+data/
+.DS_Store
