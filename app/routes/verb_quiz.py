@@ -96,7 +96,7 @@ def load_verb_data():
         print("Reading Sentences sheet...")
         sentences_df = pd.read_excel(data_path, sheet_name="Sentences")
         print(f"Sentences sheet columns: {sentences_df.columns.tolist()}")
-        print(f"First row of Sentences sheet: {sentences_df.iloc[0].to_dict()}")
+        # print(f"First row of Sentences sheet: {sentences_df.iloc[0].to_dict()}")
         
         sentences = []
         for _, row in sentences_df.iterrows():
@@ -114,12 +114,12 @@ def load_verb_data():
                 continue
         
         print(f"Loaded {len(verbs)} verbs and {len(sentences)} sentences")
-        print("First few sentences:")
-        for i, sentence in enumerate(sentences[:3]):
-            print(f"Sentence {i}:")
-            print(f"  English: {sentence['English']}")
-            print(f"  German: {sentence['German']}")
-            print(f"  German example 2: {sentence['German example 2']}")
+        # print("First few sentences:")
+        # for i, sentence in enumerate(sentences[:3]):
+        #     print(f"Sentence {i}:")
+        #     print(f"  English: {sentence['English']}")
+        #     print(f"  German: {sentence['German']}")
+        #     print(f"  German example 2: {sentence['German example 2']}")
         return verbs, sentences
     except Exception as e:
         print(f"Error loading verb data: {e}")

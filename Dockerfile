@@ -10,21 +10,23 @@ RUN apt-get update && apt-get install -y \
 # Create non-root user
 RUN useradd -m -u 1000 appuser
 
-# Create data directory with proper permissions
-RUN mkdir -p /app/data && chown -R appuser:appuser /app/data
+# Create data and resource directories with proper permissions
+RUN mkdir -p /app/data /app/resource && chown -R appuser:appuser /app/data /app/resource
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
-COPY . .
+# Copy only the necessary application files
+COPY app/ /app/app/
+COPY resource/ /app/resource/
 
 # Set proper permissions
 RUN chown -R appuser:appuser /app
 
 # Set environment variables
 ENV QUIZ_DATA_PATH=/app/data
+ENV RESOURCE_PATH=/app/resource
 
 # Switch to non-root user
 USER appuser

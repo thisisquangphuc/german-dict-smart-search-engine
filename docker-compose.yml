@@ -1,15 +1,19 @@
 version: '3.8'
 
 services:
-  web:
+  learn_engine:
     build: .
     ports:
       - "8000:8000"
     volumes:
       - ./app:/app/app
-      - quiz_data:/app/data
+      - ./resource:/app/resource
+      - ./app/data:/app/data
+    env_file:
+      - .env
     environment:
       - QUIZ_DATA_PATH=/app/data
+      - RESOURCE_PATH=/app/resource
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
