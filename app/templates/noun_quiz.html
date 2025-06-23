@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German Noun Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/noun_quiz.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="article">Mode 1: Tap the Article</button>
+            <button class="mode-btn" data-mode="type">Mode 2: Type the Noun</button>
+        </div>
+
+        <!-- Mode 1: Tap the Article -->
+        <div id="article-mode" class="quiz-mode active">
+            <div class="word-display">
+                <div class="noun"></div>
+                <div class="meaning"></div>
+            </div>
+            <div class="article-buttons">
+                <button class="article-btn" data-article="der">der</button>
+                <button class="article-btn" data-article="die">die</button>
+                <button class="article-btn" data-article="das">das</button>
+            </div>
+            <div class="result hidden">
+                <div class="full-word"></div>
+                <div class="plural"></div>
+                <div class="example"></div>
+            </div>
+            <div class="controls">
+                <button class="hint-btn hidden">Hint</button>
+                <button class="next-btn">Next</button>
+            </div>
+        </div>
+
+        <!-- Mode 2: Type the Noun -->
+        <div id="type-mode" class="quiz-mode">
+            <div class="word-display">
+                <div class="meaning"></div>
+            </div>
+            <div class="input-container">
+                <input type="text" class="noun-input" placeholder="Type the noun...">
+            </div>
+            <div class="result hidden">
+                <div class="result-box correct-answer-box">
+                    <div class="correct-answer"></div>
+                </div>
+                <div class="result-box plural-box hidden">
+                    <div class="plural"></div>
+                </div>
+                <div class="result-box example-box hidden">
+                    <div class="example"></div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="hint-btn hidden">Hint</button>
+                <button class="next-btn">Next</button>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', path='/js/noun_quiz.js') }}"></script>
+</body>
+</html> 
