@@ -1,64 +1,94 @@
-# German Dictionary Service with Caching
+# WeissWein: German Search Engine & Quiz Tool
 
-A FastAPI-based German dictionary service that uses the PONS API with local caching to minimize API calls.
+A minimalist, self-hosted **web application** for searching German words, practicing vocabulary, and playing interactive quizzes — powered by [PONS](https://en.pons.com/), [Verbformen](https://www.verbformen.de/), and [Reverso](https://context.reverso.net/).
 
-## Features
+![Home Screen](screenshots/noun.png)
 
-- German-English dictionary lookup using PONS API
-- Local SQLite caching to minimize API calls
-- Case-sensitive word handling
-- Automatic cache updates and access tracking
-- Fallback to cached results when API quota is reached
+---
 
-## Setup
+## 🚀 Features
 
-1. Clone the repository
-2. Create a `.env` file in the root directory with your PONS API key:
-   ```
-   PONS_API_KEY=your_api_key_here
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Run the application:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
+* 🔍 Word search with API fallback and local caching (SQLite)
+* 🗣️ Audio pronunciation for German words
+* ✍️ Dictation mode with sentence segmentation (In Developement)
+* 📚 Quiz game: tap-to-order style 
+* 📤 CSV Import of custom word sets
+* 📈 Stats tracking by date
+* 🛠 Runs with Docker or directly using FastAPI
 
-## API Usage
+---
 
-### Dictionary Lookup
+## Screenshots
+
+| Screen.             | Mode 1 | Mode 2 | Mode 3 |
+| ------------------- | -------- | -------- | -------- |
+| Dictionary (Including Verb conjugation) | ![](screenshots/noun.png) | ![](screenshots/verb.png) | ![](screenshots/hint.png) |
+| Quiz - Puzzel | ![](screenshots/quiz-sentence.png) | ![](screenshots/quiz-sentence-2.png) | ![](screenshots/quiz-sentence-ok.png) |
+| Quiz - Verb | ![](screenshots/quiz-verb.png) | ![](screenshots/quiz-verb-2.png) | ![](screenshots/quiz-verb-ok.png) |
+| Quiz - Noun (Article) | ![](screenshots/noun_0.png) | ![](screenshots/noun-quiz.png) |  |
+| Quiz - Noun (Full word)| ![](screenshots/noun_2.png) | ![](screenshots/noun_ok1.png) | ![](screenshots/noun_ok2.png) |
+---
+
+## 🛠️ Getting Started
+
+### 📦 Requirements
+
+* Python 3.10+
+* Docker (optional)
+
+### 🔧 Local Run
+
+```bash
+git clone https://github.com/yourname/weisswein_searchengine.git
+cd weisswein_searchengine
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+### 🐳 Docker Run
+
+```bash
+docker-compose build
+docker-compose up
+```
+
+Then open `http://<your-local-ip>:8000` in your browser.
+
+---
+
+## 🔄 Folder Structure
 
 ```
-GET /api/dict/pons?word=Haus
+app/
+├── data/               # SQLite cache for searches
+├── static/             # CSS, icons
+├── templates/          # Jinja2 templates
+├── scripts/            # audio segmentation and tools
+└── main.py             # FastAPI app
 ```
 
-Response:
-```json
-{
-    "word": "Haus",
-    "result": "...",
-    "is_cached": false
-}
-```
+---
 
-## Docker Support
+## 📥 Customization
 
-To run with Docker:
+* Add your own CSV files into `app/data/`
+* Configure `.env` for API keys (OpenAI, PONS, etc.)
+* Adjust UI templates in `templates/`
 
-1. Build the image:
-   ```bash
-   docker build -t german-dict .
-   ```
+---
 
-2. Run the container:
-   ```bash
-   docker run -p 8000:8000 -e PONS_API_KEY=your_api_key_here german-dict
-   ```
+## 🤝 Credits
 
-## Notes
+* [Verbformen.de](https://www.verbformen.de/)
+* [PONS](https://en.pons.com/)
+* [Reverso](https://context.reverso.net)
+* [FastAPI](https://fastapi.tiangolo.com/)
+* [SQLite](https://sqlite.org/)
 
-- The service maintains a SQLite database in `app/data/pons_cache.db`
-- Cache entries include word, result, creation time, search count, and last access time
-- Case sensitivity is preserved (e.g., "Haus" and "haus" are treated as different words)
+---
+
+## 📜 License
+
+MIT License
+
+> Created by anhphucne — for personal and educational use.
